@@ -1,43 +1,37 @@
 import PropTypes from 'prop-types';
 import { createPortal } from 'react-dom';
 import { Backdrop, ModalWindow } from './Modal.styled';
-import { Component } from 'react';
+import { useEffect } from 'react';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export class Modal extends Component {
-  static propTypes = {
-    src: PropTypes.string.isRequired,
-    tags: PropTypes.string.isRequired,
-    toggleModal: PropTypes.func.isRequired,
-  };
+export const Modal = ({ closeModal, children }) => {
+  useEffect(() => {
+    window.addEventListener('keydown', handleClose);
+    return () => window.removeEventListener('keydown', handleClose);
+  });
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleClose);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleClose);
-  }
-  handleClose = ({ target, currentTarget, code }) => {
+  function handleClose({ target, currentTarget, code }) {
     if (target === currentTarget) {
-      this.props.toggleModal();
+      closeModal();
       return;
     }
     if (code === 'Escape') {
-      this.props.toggleModal();
+      closeModal();
       return;
     }
     return;
-  };
-  render() {
-    const { src, tags } = this.props;
-    return createPortal(
-      <Backdrop onClick={this.handleClose}>
-        <ModalWindow>
-          <img src={src} alt={tags} />
-        </ModalWindow>
-      </Backdrop>,
-      modalRoot
-    );
   }
-}
+
+  return createPortal(
+    <Backdrop onClick={handleClose}>
+      <ModalWindow>{children}</ModalWindow>
+    </Backdrop>,
+    modalRoot
+  );
+};
+
+Modal.propTypes = {
+  closeModal: PropTypes.func.isRequired,
+  children: PropTypes.element.isRequired,
+};
